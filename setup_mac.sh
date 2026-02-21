@@ -1,12 +1,15 @@
 #!/bin/bash
 # ============================================
-#  Stock Evaluator — Setup & Start
-#  Zielordner: /Users/jan/Downloads/Aktien
+#  Stock Evaluator — Komplettes Setup
+#  Kopiere dieses Skript nach /Users/jan/Downloads/
+#  und führe es aus: bash setup_mac.sh
 # ============================================
 
 set -e
 
 TARGET="/Users/jan/Downloads/Aktien"
+REPO="https://github.com/kunerl/Kuni.git"
+BRANCH="claude/trading-stock-evaluation-tool-XM2Oh"
 
 echo ""
 echo "  ╔══════════════════════════════════════╗"
@@ -14,56 +17,68 @@ echo "  ║   Stock Evaluator — Setup            ║"
 echo "  ╚══════════════════════════════════════╝"
 echo ""
 
-# Ordner erstellen falls nötig
-mkdir -p "$TARGET"
-
-# Projektdateien kopieren
-echo "  Kopiere Dateien nach $TARGET ..."
-
-# Quellverzeichnis = wo dieses Skript liegt
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
-# Verzeichnisstruktur anlegen
-mkdir -p "$TARGET/stock_evaluator/templates"
-mkdir -p "$TARGET/stock_evaluator/static"
-mkdir -p "$TARGET/tests"
-
-# Dateien kopieren
-cp "$SCRIPT_DIR/requirements.txt" "$TARGET/"
-cp "$SCRIPT_DIR/run_web.py" "$TARGET/"
-cp "$SCRIPT_DIR/stock_evaluator/"*.py "$TARGET/stock_evaluator/"
-cp "$SCRIPT_DIR/stock_evaluator/templates/"*.html "$TARGET/stock_evaluator/templates/"
-cp "$SCRIPT_DIR/stock_evaluator/static/"* "$TARGET/stock_evaluator/static/"
-cp "$SCRIPT_DIR/tests/"*.py "$TARGET/tests/" 2>/dev/null || true
-
-# start.command kopieren (falls vorhanden)
-if [ -f "$SCRIPT_DIR/start.command" ]; then
-    cp "$SCRIPT_DIR/start.command" "$TARGET/"
-    chmod +x "$TARGET/start.command"
+# ----- 1. Prüfe ob python3 vorhanden -----
+if ! command -v python3 &> /dev/null; then
+    echo "  Fehler: python3 nicht gefunden."
+    echo "  Bitte installiere Python 3:"
+    echo "    https://www.python.org/downloads/"
+    echo ""
+    exit 1
 fi
 
-echo "  Dateien kopiert."
+echo "  Python gefunden: $(python3 --version)"
+
+# ----- 2. Prüfe ob git vorhanden -----
+if ! command -v git &> /dev/null; then
+    echo "  Fehler: git nicht gefunden."
+    echo "  Installiere Xcode Command Line Tools:"
+    echo "    xcode-select --install"
+    echo ""
+    exit 1
+fi
+
+# ----- 3. Repo klonen oder aktualisieren -----
+if [ -d "$TARGET/.git" ]; then
+    echo "  Aktualisiere bestehendes Projekt ..."
+    cd "$TARGET"
+    git pull origin "$BRANCH" 2>/dev/null || true
+else
+    echo "  Lade Projekt herunter ..."
+    rm -rf "$TARGET"
+    git clone --branch "$BRANCH" "$REPO" "$TARGET"
+fi
+
+cd "$TARGET"
+echo "  Projekt geladen."
 echo ""
 
-# Python venv erstellen
+# ----- 4. Python venv erstellen -----
 if [ ! -d "$TARGET/venv" ]; then
     echo "  Erstelle Python-Umgebung ..."
     python3 -m venv "$TARGET/venv"
-    echo "  Python-Umgebung erstellt."
 fi
 
-# Dependencies installieren
+# ----- 5. Dependencies installieren -----
 echo "  Installiere Abhängigkeiten ..."
 "$TARGET/venv/bin/pip" install --quiet --upgrade pip
 "$TARGET/venv/bin/pip" install --quiet -r "$TARGET/requirements.txt"
 echo "  Abhängigkeiten installiert."
 
+# ----- 6. Icons generieren -----
+echo "  Generiere App-Icons ..."
+"$TARGET/venv/bin/python" -m stock_evaluator.generate_icons 2>/dev/null || true
+
+# ----- 7. start.command ausführbar machen -----
+chmod +x "$TARGET/start.command"
+
 echo ""
-echo "  ✓ Setup abgeschlossen!"
-echo "  Ordner: $TARGET"
+echo "  ╔══════════════════════════════════════╗"
+echo "  ║   ✓ Setup abgeschlossen!             ║"
+echo "  ╚══════════════════════════════════════╝"
 echo ""
-echo "  Zum Starten:"
-echo "    Doppelklick auf: $TARGET/start.command"
+echo "  App starten:"
+echo "    → Doppelklick auf: Downloads/Aktien/start.command"
+echo ""
 echo "  Oder im Terminal:"
 echo "    cd $TARGET && venv/bin/python run_web.py --public"
 echo ""
