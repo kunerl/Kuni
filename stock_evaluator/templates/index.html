@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Stocks">
+    <meta name="theme-color" content="#0d1117">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
     <title>Stock Evaluator</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -214,13 +218,57 @@
             margin-top: 20px;
             padding-bottom: 20px;
         }
+
+        /* Loading Spinner */
+        .loading { display: none; text-align: center; padding: 40px 0; }
+        .loading.active { display: block; }
+        .spinner {
+            width: 40px; height: 40px;
+            margin: 0 auto 12px;
+            border: 3px solid #30363d;
+            border-top-color: #58a6ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: #8b949e; font-size: 14px; }
+
+        /* Install Banner */
+        .install-banner {
+            display: none;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-size: 13px;
+            color: #8b949e;
+            line-height: 1.5;
+        }
+        .install-banner strong { color: #e6edf3; }
+        .install-banner .close-banner {
+            float: right;
+            background: none;
+            border: none;
+            color: #484f58;
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Stock Evaluator</h1>
 
-        <form class="search-form" action="/evaluate" method="post">
+        <div class="install-banner" id="installBanner">
+            <button class="close-banner" onclick="this.parentElement.style.display='none'">&times;</button>
+            <strong>Als App installieren:</strong><br>
+            Tippe auf <strong>Teilen</strong> (unten) &rarr; <strong>Zum Home-Bildschirm</strong>
+        </div>
+
+        <form class="search-form" action="/evaluate" method="post" id="evalForm">
             <input type="text" name="ticker" placeholder="Ticker z.B. AAPL"
                    value="{{ request.form.get('ticker', '') }}" autocapitalize="characters" autocomplete="off">
             <select name="period">
@@ -363,9 +411,31 @@
         </div>
         {% endif %}
 
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">Daten werden geladen...</div>
+        </div>
+
         <div class="disclaimer">
             Keine Anlageberatung. Nur zu Informationszwecken.
         </div>
     </div>
+
+    <script>
+        // Service Worker registrieren
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/static/sw.js");
+        }
+
+        // Install-Banner auf iPhone anzeigen (wenn nicht standalone)
+        if (navigator.userAgent.match(/iPhone|iPad/) && !window.navigator.standalone) {
+            document.getElementById("installBanner").style.display = "block";
+        }
+
+        // Loading-Spinner beim Absenden
+        document.getElementById("evalForm").addEventListener("submit", function() {
+            document.getElementById("loading").classList.add("active");
+        });
+    </script>
 </body>
 </html>

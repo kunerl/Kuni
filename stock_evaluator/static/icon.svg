@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0d1117"/>
+  <rect x="32" y="32" width="448" height="448" rx="72" fill="#161b22"/>
+  <!-- Chart bars -->
+  <rect x="80" y="320" width="56" height="100" rx="8" fill="#da3633"/>
+  <rect x="160" y="260" width="56" height="160" rx="8" fill="#da3633"/>
+  <rect x="240" y="200" width="56" height="220" rx="8" fill="#238636"/>
+  <rect x="320" y="140" width="56" height="280" rx="8" fill="#238636"/>
+  <rect x="400" y="100" width="56" height="320" rx="8" fill="#238636"/>
+  <!-- Trend line -->
+  <polyline points="108,300 188,240 268,180 348,120 428,80"
+            fill="none" stroke="#58a6ff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Arrow tip -->
+  <polygon points="428,80 408,95 418,68" fill="#58a6ff"/>
+</svg>

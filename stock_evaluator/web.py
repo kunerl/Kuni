@@ -1,13 +1,18 @@
 """Web-Interface für das Aktien-Bewertungstool."""
 
-import json
-from dataclasses import asdict
+from pathlib import Path
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 
 from .evaluator import evaluate_stock
 
-app = Flask(__name__, template_folder="templates")
+_pkg_dir = Path(__file__).parent
+app = Flask(
+    __name__,
+    template_folder=str(_pkg_dir / "templates"),
+    static_folder=str(_pkg_dir / "static"),
+    static_url_path="/static",
+)
 
 
 @app.route("/")
