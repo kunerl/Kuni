@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0d1117">
+    <title>Admin – SharePoint Datentransfers</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            color: #58a6ff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .nav a:hover { text-decoration: underline; }
+
+        h1 {
+            font-size: 22px;
+            color: #58a6ff;
+            margin-bottom: 20px;
+        }
+
+        .error {
+            background: #490202;
+            border: 1px solid #f85149;
+            color: #f85149;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .demo-banner {
+            background: #1c1d29;
+            border: 1px solid #8b8000;
+            color: #e3b341;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .demo-banner code {
+            background: #30363d;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* Statistik-Karten */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #58a6ff;
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: #8b949e;
+            margin-top: 4px;
+        }
+
+        /* Site-Info */
+        .site-info {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .site-info h2 {
+            font-size: 16px;
+            color: #58a6ff;
+            margin-bottom: 8px;
+        }
+        .site-info .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 14px;
+            border-bottom: 1px solid #21262d;
+        }
+        .site-info .info-row:last-child { border-bottom: none; }
+        .info-label { color: #8b949e; }
+        .info-value { font-weight: 600; }
+
+        /* Aktivitäten-Tabelle */
+        .activity-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+        }
+        .activity-card h2 {
+            font-size: 16px;
+            color: #58a6ff;
+            margin-bottom: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th {
+            text-align: left;
+            padding: 8px 12px;
+            border-bottom: 2px solid #30363d;
+            color: #8b949e;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #21262d;
+            vertical-align: top;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: #1c2028; }
+
+        .file-name {
+            font-weight: 600;
+            color: #e6edf3;
+            word-break: break-all;
+        }
+        .file-name a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+        .file-name a:hover { text-decoration: underline; }
+        .file-path {
+            font-size: 11px;
+            color: #8b949e;
+            margin-top: 2px;
+            word-break: break-all;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .action-badge.erstellt  { background: #238636; color: #fff; }
+        .action-badge.geaendert { background: #1f6feb; color: #fff; }
+        .action-badge.geloescht { background: #da3633; color: #fff; }
+
+        .user-name { white-space: nowrap; }
+        .timestamp {
+            white-space: nowrap;
+            color: #8b949e;
+            font-size: 12px;
+        }
+        .file-size {
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        /* Mobile: Karten statt Tabelle */
+        .activity-list { display: none; }
+
+        @media (max-width: 640px) {
+            .activity-table { display: none; }
+            .activity-list { display: block; }
+
+            .activity-item {
+                padding: 12px 0;
+                border-bottom: 1px solid #21262d;
+            }
+            .activity-item:last-child { border-bottom: none; }
+
+            .activity-item .item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 4px;
+            }
+            .activity-item .item-meta {
+                font-size: 12px;
+                color: #8b949e;
+                margin-top: 4px;
+            }
+        }
+
+        .refresh-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            background: #21262d;
+            color: #e6edf3;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .refresh-btn:hover { background: #30363d; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 16px;
+            color: #8b949e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="/">&larr; Stock Evaluator</a>
+            <a href="/admin/sharepoint" class="refresh-btn">Aktualisieren</a>
+        </div>
+
+        <h1>SharePoint Datentransfers</h1>
+
+        {% if demo_mode %}
+        <div class="demo-banner">
+            <strong>Demo-Modus:</strong> Keine MS365-Credentials konfiguriert.
+            Setze die folgenden Umgebungsvariablen für die Live-Anbindung:<br>
+            <code>MS365_CLIENT_ID</code>,
+            <code>MS365_CLIENT_SECRET</code>,
+            <code>MS365_TENANT_ID</code>,
+            <code>MS365_SITE_URL</code>
+        </div>
+        {% endif %}
+
+        {% if report.error %}
+        <div class="error">{{ report.error }}</div>
+        {% endif %}
+
+        <!-- Statistiken -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">{{ report.total_files }}</div>
+                <div class="stat-label">Dateien</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ format_size(report.total_size_bytes) }}</div>
+                <div class="stat-label">Gesamtgröße</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ count_by_action(report.activities, 'erstellt') }}</div>
+                <div class="stat-label">Erstellt</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ count_by_action(report.activities, 'geändert') }}</div>
+                <div class="stat-label">Geändert</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ count_by_action(report.activities, 'gelöscht') }}</div>
+                <div class="stat-label">Gelöscht</div>
+            </div>
+        </div>
+
+        <!-- Site-Info -->
+        <div class="site-info">
+            <h2>SharePoint Site</h2>
+            <div class="info-row">
+                <span class="info-label">Site</span>
+                <span class="info-value">{{ report.site_name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">URL</span>
+                <span class="info-value">
+                    {% if report.site_url %}
+                    <a href="{{ report.site_url }}" target="_blank" style="color: #58a6ff;">{{ report.site_url }}</a>
+                    {% else %}—{% endif %}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Letzte Synchronisierung</span>
+                <span class="info-value">
+                    {% if report.last_sync %}{{ report.last_sync.strftime('%d.%m.%Y %H:%M') }}{% else %}—{% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Aktivitäten -->
+        <div class="activity-card">
+            <h2>Letzte Aktivitäten</h2>
+
+            {% if report.activities %}
+            <!-- Desktop-Tabelle -->
+            <div class="activity-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Datei</th>
+                            <th>Aktion</th>
+                            <th>Benutzer</th>
+                            <th>Zeitpunkt</th>
+                            <th style="text-align: right;">Größe</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for a in report.activities %}
+                        <tr>
+                            <td>
+                                <div class="file-name">
+                                    {% if a.web_url %}<a href="{{ a.web_url }}" target="_blank">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                                </div>
+                                <div class="file-path">{{ a.path }}</div>
+                            </td>
+                            <td>
+                                <span class="action-badge {% if a.action == 'erstellt' %}erstellt{% elif a.action == 'geändert' %}geaendert{% else %}geloescht{% endif %}">
+                                    {{ a.action }}
+                                </span>
+                            </td>
+                            <td class="user-name">{{ a.modified_by }}</td>
+                            <td class="timestamp">{{ a.modified_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td class="file-size">{{ format_size(a.size) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Mobile-Liste -->
+            <div class="activity-list">
+                {% for a in report.activities %}
+                <div class="activity-item">
+                    <div class="item-header">
+                        <div class="file-name">
+                            {% if a.web_url %}<a href="{{ a.web_url }}" target="_blank">{{ a.name }}</a>{% else %}{{ a.name }}{% endif %}
+                        </div>
+                        <span class="action-badge {% if a.action == 'erstellt' %}erstellt{% elif a.action == 'geändert' %}geaendert{% else %}geloescht{% endif %}">
+                            {{ a.action }}
+                        </span>
+                    </div>
+                    <div class="file-path">{{ a.path }}</div>
+                    <div class="item-meta">
+                        {{ a.modified_by }} &middot; {{ a.modified_at.strftime('%d.%m.%Y %H:%M') }} &middot; {{ format_size(a.size) }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                Keine Aktivitäten gefunden.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
